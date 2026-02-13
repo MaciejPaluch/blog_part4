@@ -1,4 +1,4 @@
-const Note = require('../models/blog')
+const Blog = require('../models/blog') 
 
 const initialBlogs = [
   {
@@ -13,7 +13,7 @@ const initialBlogs = [
     url: "www.wizardingworld.com",
     likes: 2000
   },
-    {
+  {
     title: "Transformers",
     author: "Bay",
     url: "www.wizardingworld.com",
@@ -21,19 +21,22 @@ const initialBlogs = [
   }
 ]
 
-// const nonExistingId = async () => {
-//   const note = new Note({ content: 'willremovethissoon' })
-//   await note.save()
-//   await note.deleteOne()
+const nonExistingId = async () => {
+  const blog = new Blog({ title: 'willremovethissoon', url: 'http://temp.com' })
+  await blog.save()
+  await blog.deleteOne()
 
-//   return note._id.toString()
-// }
+  return blog._id.toString()
+}
 
-// const notesInDb = async () => {
-//   const notes = await Note.find({})
-//   return notes.map(note => note.toJSON())
-// }
+
+const blogsInDb = async () => {
+  const blogs = await Blog.find({})
+  return blogs.map(blog => blog.toJSON())
+}
 
 module.exports = {
-  initialBlogs
+  initialBlogs,
+  blogsInDb,      
+  nonExistingId
 }
