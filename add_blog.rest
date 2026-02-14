@@ -1,9 +1,10 @@
 POST http://localhost:3003/api/blogs
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Ik1lc3Nzc3NzaWlpIiwiaWQiOiI2OTkwMzk1ODkwYzJjMTdjNjg1YmUzOTMiLCJpYXQiOjE3NzEwNzEyMDJ9.YM-hQsdJMJcyvLdR22jYnCtDHij8ggzO1DupNV-Fllc
 
 {
-  "title": "Transformers",
-  "author": "JK Rowling",
-  "url": "www.wizardingworld.com",
-  "likes": 100
+  "title": "P",
+  "author": "dawdadad",
+  "url": "www.x.com",
+  "likes": 0
 }

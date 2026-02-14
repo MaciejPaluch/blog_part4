@@ -6,12 +6,12 @@ const app = require('../app')
 const api = supertest(app)
 const helper = require('./test_helper')
 const Blog = require('../models/blog')
+const User = require('../models/user')
+const bcrypt = require('bcrypt')
 
 
 beforeEach(async () => {
   await Blog.deleteMany({})
-
-
   const blogObjects = helper.initialBlogs.map(blog => new Blog(blog))
   const promiseArray = blogObjects.map(blog => blog.save())
   await Promise.all(promiseArray)
@@ -32,7 +32,20 @@ describe('Viewing blogs (GET)', () => {
 })
 
 describe('Adding blogs (POST)', () => {
+  beforeEach(async () => {
+    await User.deleteMany({})
+  
+    const passwordHash = await bcrypt.hash('sekret', 10)
+    const user = new User({ username: 'root', passwordHash })
+  
+    await user.save()
+  })
   test('a valid blog can be added', async () => {
+    const loginResponse = await api
+      .post('/api/login')
+      .send({ username: 'root', password: 'sekret' })
+
+    const token = loginResponse.body.token
     const newBlog = {
       title: 'New Blog Title',
       author: 'New Author',
@@ -42,6 +55,7 @@ describe('Adding blogs (POST)', () => {
 
     await api
       .post('/api/blogs')
+      .set('Authorization', `Bearer ${token}`)
       .send(newBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/)
@@ -54,6 +68,10 @@ describe('Adding blogs (POST)', () => {
   })
 
   test('0 is default for likes', async () => {
+    const loginResponse = await api
+      .post('/api/login')
+      .send({ username: 'root', password: 'sekret' })
+    const token = loginResponse.body.token  
     const newBlog = {
       title: 'Blog without likes',
       author: 'Author',
@@ -61,6 +79,7 @@ describe('Adding blogs (POST)', () => {
     }
     const response = await api
       .post('/api/blogs')
+      .set('Authorization', `Bearer ${token}`)
       .send(newBlog)
       .expect(201)
 
@@ -68,24 +87,62 @@ describe('Adding blogs (POST)', () => {
   })
 
   test('400 if title or url missing', async () => {
+    const loginResponse = await api
+      .post('/api/login')
+      .send({ username: 'root', password: 'sekret' })
+    const token = loginResponse.body.token  
       const newBlog = {
       author: 'Edsger W. Dijkstra',
       likes: 5
     }
     await api
       .post('/api/blogs')
+      .set('Authorization', `Bearer ${token}`)
       .send(newBlog)
       .expect(400)
   })
 })
 
 describe('Deleting blogs (DELETE)', () => {
+   beforeEach(async () => {
+    await Blog.deleteMany({})
+    await User.deleteMany({})
+  
+    const passwordHash = await bcrypt.hash('sekret', 10)
+    const user = new User({ username: 'root', passwordHash })
+  
+    await user.save()
+    const loginResponse = await api
+      .post('/api/login')
+      .send({ username: 'root', password: 'sekret' })
+
+    const token = loginResponse.body.token
+    const newBlog = {
+      title: 'New Blog Title',
+      author: 'New Author',
+      url: 'http://newurl.com',
+      likes: 1
+    }
+
+    await api
+      .post('/api/blogs')
+      .set('Authorization', `Bearer ${token}`)
+      .send(newBlog)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+      
+  })  
   test('succeeds with status code 204 if id is valid', async () => {
+    const loginResponse = await api
+    .post('/api/login')
+    .send({ username: 'root', password: 'sekret' })
+  const token = loginResponse.body.token
     const blogsAtStart = await helper.blogsInDb()
     const blogToDelete = blogsAtStart[0]
 
     await api
       .delete(`/api/blogs/${blogToDelete.id}`)
+      .set('Authorization', `Bearer ${token}`)
       .expect(204)
 
     const blogsAtEnd = await helper.blogsInDb()
@@ -97,6 +154,10 @@ describe('Deleting blogs (DELETE)', () => {
 })
 
 describe('Updating blogs (PUT)', () => {
+  beforeEach(async () => {
+    await Blog.deleteMany({})
+    await Blog.insertMany(helper.initialBlogs)
+  })
   test('succeeds with status 200 and updates likes', async () => {
     const blogsAtStart = await helper.blogsInDb()
     const blogToUpdate = blogsAtStart[0]
